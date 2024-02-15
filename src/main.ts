@@ -1,5 +1,12 @@
 import 'phaser';
 
+function* intToIter(n: integer) {
+    for (let i = 0; i < n; i++) {
+        yield i;
+    }
+}
+
+// CONSTANT VALUES FOR TESTING
 enum Colors {
     Red = 0xFF0000,
     Blue = 0x0000FF,
@@ -19,6 +26,22 @@ enum Colors {
 
     Default = 0xFFFFFF // For exception of 0 players; id should never return 0.
 }
+
+const names = [
+    'John', 'Emma', 'James', 'Olivia', 'Michael', 'Sophia', 'David', 'Isabella', 'Daniel', 'Mia',
+    'Matthew', 'Charlotte', 'Andrew', 'Amelia', 'Joseph'
+];
+
+class Player {
+    name: string;
+    color: number;
+    constructor(name: string, color: number) {
+        this.name = name;
+        this.color = color;
+    }
+}
+
+////////////////////////
   
 function getColor(playerCount: number): number {
     switch (playerCount) {
@@ -52,48 +75,77 @@ const images: ImageAsset[] = [
 ];
 
 class PlayGame extends Phaser.Scene {
+    // In player container
+    bubbles: Phaser.GameObjects.BitmapText[] = [];
     sprites: Phaser.GameObjects.Image[] = [];
+
     constructor() {
         super("PlayGame");
     }
+
     preload(): void {
         this.loadImages(images);
+
+        let file = 'minogram_6x10';
+        this.load.bitmapFont('pixel', 'assets/' + file + '.png', 'assets/' + file + '.xml');
     }
+
     create(): void {
+        // GAME/STATIC PARAMETERS
         this.cameras.main.setBackgroundColor('#000');
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
-        const radius = 200;
-        const playerCount = 15;
+        const radius = 360;
 
-        this.setPlayerCircle(playerCount, centerX, centerY, radius);
-
+        // DATABASE PARAMETERS
+        const playerCount = 15; // Currently static
+        const players = this.createPlayers(playerCount);
+        
+        // GRAPHICS CREATION
+        this.createPlayerCircle(players, centerX, centerY, radius);
     }
+
     update(): void {
-        for (const sprite of this.sprites) {
-            sprite.angle += 1;
-            sprite.x += Math.random() * 2 - 1;
-            sprite.y += Math.random() * 2 - 1;
-        }
+        //
     }
 
     // PROCEDURAL METHODS
-    setPlayerCircle(playerCount: number, centerX: number, centerY: number, radius: number): void {
-        for (let i = 0; i < playerCount; i++) {
-            const angle = (i / playerCount) * 2 * Math.PI;
+    createPlayers(playerCount: integer): Player[] {
+        const players = []
+        for (const count of intToIter(playerCount)) {
+            players.push(new Player(names[count], count));
+        }
+
+        return players
+    }
+
+    createPlayerCircle(players: Player[], centerX: number, centerY: number, radius: number): void {
+        for (const [index, player] of players.entries()) {
+            const angle = (index / players.length) * 2 * Math.PI;
             const x = centerX + radius * Math.cos(angle);
             const y = centerY + radius * Math.sin(angle);
-            const sprite = this.add.image(x, y, 'playerSprite').setScale(2);
-            sprite.setTint(getColor(i));
-            this.sprites.push(sprite);
+            
+            // TEXT BUBBLE
+            const textBubble = this.add
+                .bitmapText(x, y - 60, 'pixel', player.name, 20)
+                .setTint(getColor(player.color))
+                .setOrigin(0.5);
+            this.bubbles.push(textBubble);
+
+            // PLAYER SPRITE
+            const playerSprite = this.add
+                .image(x, y, 'playerSprite')
+                .setScale(3)
+                .setTint(getColor(player.color));
+            this.sprites.push(playerSprite);
         }
 
         this.add.image(centerX, centerY, 'podium').setScale(1);
     }
 
-    // HELPER METHODS
+    // CUSTOM HELPER METHODS
     loadImages(images: ImageAsset[]): void { 
-        for (let image of images) {
+        for (const image of images) {
             this.load.image(image.key, image.path);
             this.load.on('filecomplete-image-' + image.key, () => {
                 this.textures.get(image.key).setFilter(Phaser.Textures.FilterMode.NEAREST);
@@ -110,9 +162,10 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 800,
-        height: 800
+        width: 1000,
+        height: 1000
     },
+    antialias: false,
     scene: PlayGame
 };
 
