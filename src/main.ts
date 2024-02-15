@@ -63,8 +63,8 @@ class PlayGame extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#000');
 
         // DATABASE PARAMETERS
-        const playerCount = 15; // Currently static
-        this.players = this.createPlayers(playerCount);
+        const userCount = 15; // Currently static
+        this.players = this.createPlayers(userCount);
         
         // GRAPHICS CREATION
         this.createPlayerCircle(this.players);
@@ -86,9 +86,9 @@ class PlayGame extends Phaser.Scene {
     }
 
     // PROCEDURAL METHODS
-    createPlayers(playerCount: integer): Player[] {
+    createPlayers(userCount: integer, users?: unknown): Player[] {
         const players = []
-        for (let count = 0; count < playerCount; count++) {
+        for (let count = 0; count < userCount; count++) {
             players.push(new Player(this, '...', COLORS[count]));
         }
 
